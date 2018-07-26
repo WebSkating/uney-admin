@@ -1,18 +1,15 @@
 <template>
   <div class="home">
-    <img src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <el-tabs v-model="activeName" @tab-click="handleClick">
+    <el-tab-pane label="订单管理" name="first">订单管理</el-tab-pane>
+    <el-tab-pane label="我的处理" name="second">我的处理</el-tab-pane>
+  </el-tabs>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue'
 
 export default {
-  name: 'home',
-  components: {
-    HelloWorld
-  }
+  name: 'home'
 }
 </script>
