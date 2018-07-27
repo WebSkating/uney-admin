@@ -38,12 +38,7 @@ axios.interceptors.response.use(
     //   console.log(result);
       console.log(result.errorCode);
       store.commit(types.LOGOUT);
-      router.replace({
-        path: 'login',
-        query: {
-          redirect: router.currentRoute.fullPath
-        }
-      });
+      router.replace('/');
     } else {
       return response;
     }
@@ -59,12 +54,7 @@ axios.interceptors.response.use(
           console.log('response.status: 401');
           // 401 清除token信息并跳转到登录页面
           store.commit(types.LOGOUT);
-          router.replace({
-            path: 'login',
-            query: {
-              redirect: router.currentRoute.fullPath
-            }
-          });
+          router.replace('/');
       }
     }
     //判断超时原因 路由跳转页面

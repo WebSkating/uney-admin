@@ -55,6 +55,8 @@
 
 <script>
     import axios from 'axios';
+    import * as types from "../static/js/types.js";
+    import store from '../store'
     export default {
         name: 'login',
         data() {
@@ -67,6 +69,34 @@
                 messsageStatus: true,
                 timer: null, //定时器对象
                 count: '' //获取验证码后用户等待秒数
+            }
+        },
+        created: function () {
+            if (localStorage.token && localStorage.token != undefined) {
+                this.$store.commit(types.LOGIN, {
+                    token: localStorage.token,
+                    sessionId: localStorage.session
+                });
+                let self = this;
+                console.log('refreshToken begin!');
+                setTimeout(function () {
+                    self.$axios.post('/auth/refreshToken.json').then(result => {
+                        console.log('refreshToken...');
+                        if (result) {
+                            console.log(result.data);
+                            console.log("token: " + result.data.data.token);
+                            console.log("sessionId: " + result.data.data.sessionId);
+                            self.$store.commit(types.LOGIN, {
+                                token: result.data.data.token,
+                                sessionId: result.data.data.sessionId
+                            });
+                            console.log('refreshToken over!');
+                        }
+                    });
+                }, 200);
+                this.$router.replace('/home');
+            } else {
+                this.$store.commit(types.LOGOUT);
             }
         },
         mounted() {
@@ -145,11 +175,24 @@
                     this.showErrorInfo = true;
                     return;
                 }
-                // if (!reg.test(this.phonenum)) {
-                //     this.errorInfo = '短信验证码不正确';
-                //     return;
-                // }
-                this.$router.push('/home');
+                axios({
+                    method: "POST",
+                    url: "/auth/login.json",
+                    params: {
+                        mobile: this.phonenum,
+                        password: this.$md5(this.password),
+                        type: "1",
+                        verifyCode: this.vcode
+                    }
+                }).then(result => {
+                    if (result.data.errorCode == 0) {
+                        this.$store.commit(types.LOGIN, result.data.data);
+                        this.$router.push('/home');
+                    } else {
+                        this.errorInfo = result.data.errorInfo;
+                        this.showErrorInfo = true;
+                    }
+                });
             }
         }
     }
