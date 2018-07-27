@@ -36,7 +36,7 @@
                     <el-col :span="6" class="send-message-wrap">
                         <el-button type="primary" icon="el-icon-message" v-if="messsageStatus" class="ml15" @click="smsCode"></el-button>
                         <el-button type="info" v-else class="ml15" disabled>
-                            <span class="time">59s</span>
+                            <span class="time">{{count}}s</span>
                         </el-button>
                     </el-col>
                 </el-row>
@@ -54,6 +54,7 @@
 </template>
 
 <script>
+    import axios from 'axios';
     export default {
         name: 'login',
         data() {
@@ -63,15 +64,60 @@
                 vcode: '',
                 errorInfo: '用户名或密码错误',
                 showErrorInfo: false,
-                messsageStatus: true
+                messsageStatus: true,
+                timer: null, //定时器对象
+                count: '' //获取验证码后用户等待秒数
             }
         },
         mounted() {
-            
+
         },
         methods: {
+            //验证码
             smsCode() {
-                this.messsageStatus = false;
+                var reg = /^1[23456789]\d{9}$/;
+                if (this.phonenum === '') {
+                    this.errorInfo = '请输入手机号码';
+                    this.showErrorInfo = true;
+                } else if (!reg.test(this.phonenum)) {
+                    this.errorInfo = '手机号码格式不正确';
+                    this.showErrorInfo = true;
+                    //console.log(this.phonenum)
+                } else {
+                    let that = this;
+
+                    const TIME_COUNT = 60; //设置60秒获取一次
+                    //如果计时器对象不存在
+                    if (!that.timer) {
+                        that.count = TIME_COUNT;
+                        //如果localStorage中存在timecount说明用户刷新了页面 继续保持读秒
+                        // if(localStorage.timecount){
+                        //   that.count = localStorage.timecount;
+                        // }
+                        that.messsageStatus = false; //倒计时信息
+                        that.timer = setInterval(() => {
+                            if (that.count > 0 && that.count <= TIME_COUNT) {
+                                that.count--; //每次运行 秒数减少 倒计时效果
+                                // localStorage.timecount = that.count;
+                            } else {
+                                that.messsageStatus = true; //文字为 获取验证码
+                                // localStorage.removeItem('timecount');
+                                clearInterval(that.timer); //清除定时器
+                                that.timer = null; //清除定时器对象
+                            }
+                        }, 1000);
+                    }
+                    /* 发送手机验证码方法 */
+                    axios({
+                        method: "POST",
+                        url: "/auth/smsValidate.json",
+                        params: {
+                            mobile: that.phonenum
+                        }
+                    }).then(function (result) {
+                        console.log(result.data);
+                    })
+                }
             },
             errorInfoClose() {
                 this.showErrorInfo = false;
@@ -112,7 +158,7 @@
 <style scoped>
     .container-wrap {
         min-width: 1180px;
-        height:100%;
+        height: 100%;
         min-height: 900px;
         background-color: #409EFF;
     }
